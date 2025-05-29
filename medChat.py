@@ -3,13 +3,19 @@ import os
 import streamlit as st
 from openai import OpenAI
 
-load_dotenv()  # Loads variables from .env into environment
+# === Load Environment Variables ===
+load_dotenv()
 
-api_key=os.getenv("OPENAI_API_KEY")
-# Set your OpenAI API key here or use environment variable
-#openai.api_key = os.getenv(api_key) or api_key
-client = OpenAI( api_key = api_key)
+# === Load API Key from .env or Streamlit Secrets ===
+api_key = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY")
+if not api_key:
+    st.error("❌ OPENAI_API_KEY not found. Set it in your .env or Streamlit Secrets.")
+    st.stop()
 
+# === Initialize OpenAI Client ===
+client = OpenAI(api_key=api_key)
+
+# === Report Generator Function ===
 @st.cache_data(show_spinner=False)
 def generate_report(conversation, report_type):
     if report_type == "patient":
@@ -70,25 +76,32 @@ def generate_report(conversation, report_type):
         return "Invalid report type"
 
     try:
-        #client = OpenAI(api_key=os.getenv("OPENAI_API_KEY") or api_key)
-
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        return f"Error: {str(e)}"
+        # Fallback to GPT-3.5 if GPT-4o fails
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as inner_e:
+            return f"Error using GPT-4o and fallback GPT-3.5: {str(inner_e)}"
 
 
-# Streamlit UI
+# === Streamlit UI ===
 st.set_page_config(page_title="Hindi Medical Report Generator", layout="wide")
 st.title("🩺 Hindi Medical Talk Analyzer")
 
 conversation = st.text_area("Paste the Hindi conversation between doctor and patient:", height=300)
+
 if st.button("Clear Cache"):
     st.cache_data.clear()
-    st.success("Cache cleared. You can regenerate fresh reports now.")
+    st.success("✅ Cache cleared. You can regenerate fresh reports now.")
 
 if st.button("Generate Reports"):
     if conversation.strip():
@@ -103,29 +116,27 @@ if st.button("Generate Reports"):
         with st.spinner("Generating Keyword & Intent Report..."):
             intent_report = generate_report(conversation, "intent")
 
-        st.success("Reports Generated!")
+        st.success("✅ Reports Generated!")
 
-        st.subheader(" Patient Report")
+        st.subheader("🧾 Patient Report")
         st.text_area("Patient Report", patient_report, height=100)
 
-        st.subheader(" Doctor Report")
+        st.subheader("🩺 Doctor Report")
         st.text_area("Doctor Report", doctor_report, height=100)
 
-        st.subheader(" Firm Report")
+        st.subheader("🏢 Firm Report")
         st.text_area("Firm Report", firm_report, height=100)
 
-        st.subheader(" Sentiment & Tone Analysis")
+        st.subheader("💬 Sentiment & Tone Analysis")
         st.text_area("Sentiment Analysis", sentiment_report, height=100)
-        
-        st.subheader(" Keyword & Intent Detection")
+
+        st.subheader("🔍 Keyword & Intent Detection")
         st.text_area("Intent & Keywords", intent_report, height=100)
 
-        st.download_button("Download Patient Report", patient_report)
-
-
+        st.download_button("📥 Download Patient Report", patient_report)
 
     else:
-        st.warning("Please paste a conversation before generating reports.")
+        st.warning("⚠️ Please paste a conversation before generating reports.")
 
 st.markdown("---")
 st.caption("Built using OpenAI API and Streamlit | ©2025")
