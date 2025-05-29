@@ -75,22 +75,18 @@ def generate_report(conversation, report_type):
     else:
         return "Invalid report type"
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        # Fallback to GPT-3.5 if GPT-4o fails
+    # Try GPT-4o first, fallback to GPT-3.5 silently
+    for model_name in ["gpt-4o", "gpt-3.5-turbo"]:
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=model_name,
                 messages=[{"role": "user", "content": prompt}]
             )
             return response.choices[0].message.content.strip()
-        except Exception as inner_e:
-            return f"Error using GPT-4o and fallback GPT-3.5: {str(inner_e)}"
+        except:
+            continue
+
+    return "⚠️ Could not generate report at this time. Please try again later."
 
 
 # === Streamlit UI ===
