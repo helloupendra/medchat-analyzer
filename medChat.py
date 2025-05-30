@@ -135,35 +135,46 @@ if st.button("Clear Cache"):
 
 if st.button("Generate Reports"):
     if conversation.strip():
+        st.success("⏳ Generating reports...")
+
+        # Placeholders for dynamic output
+        patient_placeholder = st.empty()
+        doctor_placeholder = st.empty()
+        firm_placeholder = st.empty()
+        sentiment_placeholder = st.empty()
+        intent_placeholder = st.empty()
+
+        # Patient Report
+        patient_placeholder.subheader("🧾 Patient Report")
         with st.spinner("Generating Patient Report..."):
-            patient_report = generate_report(conversation, "patient")
+            patient_text = generate_report(conversation, "patient")
+            patient_placeholder.text_area("Patient Report", patient_text, height=100)
+
+        # Doctor Report
+        doctor_placeholder.subheader("🩺 Doctor Report")
         with st.spinner("Generating Doctor Report..."):
-            doctor_report = generate_report(conversation, "doctor")
+            doctor_text = generate_report(conversation, "doctor")
+            doctor_placeholder.text_area("Doctor Report", doctor_text, height=100)
+
+        # Firm Report
+        firm_placeholder.subheader("🏢 Firm Report")
         with st.spinner("Generating Firm Report..."):
-            firm_report = generate_report(conversation, "firm")
+            firm_text = generate_report(conversation, "firm")
+            firm_placeholder.text_area("Firm Report", firm_text, height=100)
+
+        # Sentiment Report
+        sentiment_placeholder.subheader("💬 Sentiment & Tone Analysis")
         with st.spinner("Generating Sentiment & Tone Report..."):
-            sentiment_report = generate_report(conversation, "sentiment")
+            sentiment_text = generate_report(conversation, "sentiment")
+            sentiment_placeholder.text_area("Sentiment Analysis", sentiment_text, height=100)
+
+        # Intent Report
+        intent_placeholder.subheader("🔍 Keyword & Intent Detection")
         with st.spinner("Generating Keyword & Intent Report..."):
-            intent_report = generate_report(conversation, "intent")
+            intent_text = generate_report(conversation, "intent")
+            intent_placeholder.text_area("Intent & Keywords", intent_text, height=100)
 
-        st.success("✅ Reports Generated!")
-
-        st.subheader("🧾 Patient Report")
-        st.text_area("Patient Report", patient_report, height=100)
-
-        st.subheader("🩺 Doctor Report")
-        st.text_area("Doctor Report", doctor_report, height=100)
-
-        st.subheader("🏢 Firm Report")
-        st.text_area("Firm Report", firm_report, height=100)
-
-        st.subheader("💬 Sentiment & Tone Analysis")
-        st.text_area("Sentiment Analysis", sentiment_report, height=100)
-
-        st.subheader("🔍 Keyword & Intent Detection")
-        st.text_area("Intent & Keywords", intent_report, height=100)
-
-        st.download_button("📥 Download Patient Report", patient_report)
+        st.download_button("📥 Download Patient Report", patient_text)
 
     else:
         st.warning("⚠️ Please paste or select a conversation before generating reports.")
